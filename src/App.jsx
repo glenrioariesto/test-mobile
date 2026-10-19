@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { MOCK_PRODUCTS } from './data/products';
 import { CartProvider } from './context/CartContext';
+import { useCart } from './hooks/useCart';
+import { useProducts } from './hooks/useProducts';
+import { useModal } from './hooks/useModal';
 import { useNotification } from './hooks/useNotification';
 import { useDebounce } from './hooks/useDebounce';
 import { Header } from './components/Header';
@@ -11,56 +13,36 @@ import { ConfirmationModal } from './components/ConfirmationModal';
 import { ToastContainer } from './components/ToastContainer';
 
 export function AppContent() {
-    // Product Catalog State
-    const [products, setProducts] = useState([]);
-    const [isLoadingProducts, setIsLoadingProducts] = useState(true);
-    const [catalogError, setCatalogError] = useState(null);
+    // 1. Product Catalog Custom Hook
+    const { products, isLoading: isLoadingProducts, error: catalogError, refetch: loadProducts } = useProducts();
 
-    // Search State with Debounce (Objective 4)
+    // 2. Search State with Debounce (Objective 4)
     const [searchQuery, setSearchQuery] = useState('');
     const debouncedSearch = useDebounce(searchQuery, 300);
 
-    // UI Drawer & Modal States
+    // 3. UI Drawer & Modal States
     const [isCartOpen, setIsCartOpen] = useState(false);
     const [badgeBounce, setBadgeBounce] = useState(false);
-    const [modalConfig, setModalConfig] = useState(null);
     const [isCheckingOut, setIsCheckingOut] = useState(false);
 
-    // Notification Queue (Objective 2)
+    // 4. Modal Lifecycle Custom Hook (Objective 1)
+    const { modalConfig, openModal, closeModal } = useModal();
+
+    // 5. Notification Queue Custom Hook (Objective 2)
     const { toasts, showToast, removeToast } = useNotification();
 
-    // Trigger Badge Bounce
+    // Trigger Badge Bounce Animation
     const triggerBadgeBounce = useCallback(() => {
         setBadgeBounce(true);
         setTimeout(() => setBadgeBounce(false), 500);
     }, []);
-
-    // Load Products with Error Boundary Simulation
-    const loadProducts = useCallback(() => {
-        setIsLoadingProducts(true);
-        setCatalogError(null);
-
-        setTimeout(() => {
-            try {
-                setProducts(MOCK_PRODUCTS);
-                setIsLoadingProducts(false);
-            } catch (err) {
-                setCatalogError('Gagal memuat katalog produk. Periksa koneksi Anda.');
-                setIsLoadingProducts(false);
-            }
-        }, 600);
-    }, []);
-
-    useEffect(() => {
-        loadProducts();
-    }, [loadProducts]);
 
     // Keyboard Accessibility: Escape key closes modal & cart drawer
     useEffect(() => {
         const handleKeyDown = (e) => {
             if (e.key === 'Escape') {
                 if (modalConfig?.isOpen) {
-                    setModalConfig(null);
+                    closeModal();
                 } else if (isCartOpen) {
                     setIsCartOpen(false);
                 }
@@ -69,7 +51,7 @@ export function AppContent() {
 
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [modalConfig, isCartOpen]);
+    }, [modalConfig?.isOpen, closeModal, isCartOpen]);
 
     // Case-Insensitive Filtered Products (Objective 4)
     const filteredProducts = useMemo(() => {
@@ -80,8 +62,7 @@ export function AppContent() {
 
     // Dialog Prompt: Remove Item Confirmation (Objective 1)
     const promptRemoveItem = useCallback((product, onConfirmRemove) => {
-        setModalConfig({
-            isOpen: true,
+        openModal({
             icon: '🗑️',
             title: 'Hapus Item dari Keranjang?',
             message: `Apakah Anda yakin ingin menghapus "${product.name}" dari keranjang belanja?`,
@@ -93,7 +74,7 @@ export function AppContent() {
                 showToast(`"${product.name}" telah dihapus dari keranjang.`, 'warning');
             }
         });
-    }, [showToast]);
+    }, [openModal, showToast]);
 
     // Dialog Prompt: Checkout Confirmation (Objective 1)
     const promptCheckout = useCallback((cartItems, totalQuantity, totalPrice, onClearCart) => {
@@ -102,8 +83,7 @@ export function AppContent() {
             return;
         }
 
-        setModalConfig({
-            isOpen: true,
+        openModal({
             icon: '💳',
             title: 'Konfirmasi Transaksi Pembayaran',
             message: 'Mohon tinjau rincian pesanan Anda sebelum melanjutkan ke proses pembayaran:',
@@ -137,7 +117,7 @@ export function AppContent() {
                 }, 1200);
             }
         });
-    }, [showToast]);
+    }, [openModal, showToast]);
 
     return (
         <CartProvider onNotify={showToast} onBounce={triggerBadgeBounce}>
@@ -154,7 +134,7 @@ export function AppContent() {
                 onCloseCart={() => setIsCartOpen(false)}
                 badgeBounce={badgeBounce}
                 modalConfig={modalConfig}
-                onCloseModal={() => setModalConfig(null)}
+                onCloseModal={closeModal}
                 toasts={toasts}
                 onDismissToast={removeToast}
                 promptRemoveItem={promptRemoveItem}
@@ -164,9 +144,6 @@ export function AppContent() {
         </CartProvider>
     );
 }
-
-// Inner Layout consuming CartContext
-import { useCart } from './hooks/useCart';
 
 function AppLayout({
     searchQuery,

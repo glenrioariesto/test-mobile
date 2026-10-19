@@ -1,6 +1,15 @@
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 
 export function ConfirmationModal({ config, onClose }) {
+    const confirmBtnRef = useRef(null);
+
+    // Accessibility: Auto-focus the action button when dialog opens
+    useEffect(() => {
+        if (config?.isOpen) {
+            confirmBtnRef.current?.focus();
+        }
+    }, [config?.isOpen]);
+
     if (!config || !config.isOpen) return null;
 
     return (
@@ -29,6 +38,7 @@ export function ConfirmationModal({ config, onClose }) {
                         {config.cancelText || 'Batal'}
                     </button>
                     <button 
+                        ref={confirmBtnRef}
                         className={`modal-btn modal-btn-confirm ${config.confirmVariant || 'primary'}`}
                         onClick={() => {
                             config.onConfirm();
