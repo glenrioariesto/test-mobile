@@ -2,6 +2,7 @@
 @import './variables.css';
 @import './base.css';
 @import './header.css';
+@import './navigation.css';
 @import './search.css';
 @import './products.css';
 @import './cart.css';

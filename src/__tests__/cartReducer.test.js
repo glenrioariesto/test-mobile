@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { cartReducer } from '../context/CartContext';
+import { cartReducer } from '../context/cartReducer';
 
 describe('cartReducer - Unit & Invariance Tests', () => {
     const mockProduct1 = { id: 1, name: '無線藍牙耳機', price: 2999, emoji: '🎧', stepMultiplier: 1 };

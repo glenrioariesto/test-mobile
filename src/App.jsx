@@ -1,35 +1,28 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { CartProvider } from './context/CartContext';
 import { useCart } from './hooks/useCart';
-import { useProducts } from './hooks/useProducts';
 import { useModal } from './hooks/useModal';
 import { useNotification } from './hooks/useNotification';
-import { useDebounce } from './hooks/useDebounce';
 import { Header } from './components/Header';
-import { SearchBar } from './components/SearchBar';
-import { ProductGrid } from './components/ProductGrid';
 import { CartDrawer } from './components/CartDrawer';
 import { ConfirmationModal } from './components/ConfirmationModal';
 import { ToastContainer } from './components/ToastContainer';
+import { ShopPage } from './pages/ShopPage';
+import { CartPage } from './pages/CartPage';
+import { CheckoutPage } from './pages/CheckoutPage';
 import { formatCurrency } from './utils/formatters';
 
 export function AppContent() {
-    // 1. Product Catalog Custom Hook
-    const { products, isLoading: isLoadingProducts, error: catalogError, refetch: loadProducts } = useProducts();
-
-    // 2. Search State with Debounce (Objective 4)
-    const [searchQuery, setSearchQuery] = useState('');
-    const debouncedSearch = useDebounce(searchQuery, 300);
-
-    // 3. UI Drawer & Modal States
+    // UI Drawer & Modal States
     const [isCartOpen, setIsCartOpen] = useState(false);
     const [badgeBounce, setBadgeBounce] = useState(false);
     const [isCheckingOut, setIsCheckingOut] = useState(false);
 
-    // 4. Modal Lifecycle Custom Hook (Objective 1)
+    // Modal Lifecycle Custom Hook (Objective 1)
     const { modalConfig, openModal, closeModal } = useModal();
 
-    // 5. Notification Queue Custom Hook (Objective 2)
+    // Notification Queue Custom Hook (Objective 2)
     const { toasts, showToast, removeToast } = useNotification();
 
     // Trigger Badge Bounce Animation
@@ -53,13 +46,6 @@ export function AppContent() {
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, [modalConfig?.isOpen, closeModal, isCartOpen]);
-
-    // Case-Insensitive Filtered Products (Objective 4)
-    const filteredProducts = useMemo(() => {
-        const query = debouncedSearch.trim().toLowerCase();
-        if (!query) return products;
-        return products.filter(p => p.name.toLowerCase().includes(query));
-    }, [products, debouncedSearch]);
 
     // Dialog Prompt: Remove Item Confirmation (Objective 1)
     const promptRemoveItem = useCallback((product, onConfirmRemove) => {
@@ -122,38 +108,26 @@ export function AppContent() {
 
     return (
         <CartProvider onNotify={showToast} onBounce={triggerBadgeBounce}>
-            <AppLayout
-                searchQuery={searchQuery}
-                onSearchChange={setSearchQuery}
-                onClearSearch={() => setSearchQuery('')}
-                filteredProducts={filteredProducts}
-                isLoadingProducts={isLoadingProducts}
-                catalogError={catalogError}
-                onRetryLoadProducts={loadProducts}
-                isCartOpen={isCartOpen}
-                onOpenCart={() => setIsCartOpen(true)}
-                onCloseCart={() => setIsCartOpen(false)}
-                badgeBounce={badgeBounce}
-                modalConfig={modalConfig}
-                onCloseModal={closeModal}
-                toasts={toasts}
-                onDismissToast={removeToast}
-                promptRemoveItem={promptRemoveItem}
-                promptCheckout={promptCheckout}
-                isCheckingOut={isCheckingOut}
-            />
+            <HashRouter>
+                <AppLayout
+                    isCartOpen={isCartOpen}
+                    onOpenCart={() => setIsCartOpen(true)}
+                    onCloseCart={() => setIsCartOpen(false)}
+                    badgeBounce={badgeBounce}
+                    modalConfig={modalConfig}
+                    onCloseModal={closeModal}
+                    toasts={toasts}
+                    onDismissToast={removeToast}
+                    promptRemoveItem={promptRemoveItem}
+                    promptCheckout={promptCheckout}
+                    isCheckingOut={isCheckingOut}
+                />
+            </HashRouter>
         </CartProvider>
     );
 }
 
 function AppLayout({
-    searchQuery,
-    onSearchChange,
-    onClearSearch,
-    filteredProducts,
-    isLoadingProducts,
-    catalogError,
-    onRetryLoadProducts,
     isCartOpen,
     onOpenCart,
     onCloseCart,
@@ -166,35 +140,33 @@ function AppLayout({
     promptCheckout,
     isCheckingOut
 }) {
-    const { addToCart, removeItem, clearCart, cartItems, totalQuantity, totalPrice } = useCart();
+    const { removeItem, clearCart, cartItems, totalQuantity, totalPrice } = useCart();
 
     return (
         <div className="app-container">
-            {/* Header with Title and Cart Icon */}
+            {/* Header with Title, Navigation Links & Cart Button */}
             <Header onOpenCart={onOpenCart} badgeBounce={badgeBounce} />
 
-            {/* Search Bar for Product Discovery */}
-            <SearchBar 
-                searchQuery={searchQuery}
-                onSearchChange={onSearchChange}
-                onClear={onClearSearch}
-                totalResults={filteredProducts.length}
-            />
-
-            {/* Product Grid and States */}
-            <main>
-                <ProductGrid 
-                    products={filteredProducts}
-                    isLoading={isLoadingProducts}
-                    error={catalogError}
-                    onRetry={onRetryLoadProducts}
-                    searchQuery={searchQuery}
-                    onResetSearch={onClearSearch}
-                    onAddToCart={addToCart}
+            {/* React Router Page Routes */}
+            <Routes>
+                <Route path="/" element={<ShopPage />} />
+                <Route 
+                    path="/cart" 
+                    element={<CartPage onPromptRemove={(prod) => promptRemoveItem(prod, removeItem)} />} 
                 />
-            </main>
+                <Route 
+                    path="/checkout" 
+                    element={
+                        <CheckoutPage 
+                            onPromptCheckout={promptCheckout} 
+                            isCheckingOut={isCheckingOut} 
+                        />
+                    } 
+                />
+                <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
 
-            {/* Cart Drawer Sidebar */}
+            {/* Quick Slide Cart Drawer Sidebar */}
             <CartDrawer 
                 isOpen={isCartOpen}
                 onClose={onCloseCart}
@@ -209,7 +181,7 @@ function AppLayout({
                 onClose={onCloseModal}
             />
 
-            {/* Floating Toast Container */}
+            {/* Floating Toast Notification Container */}
             <ToastContainer 
                 toasts={toasts}
                 onDismiss={onDismissToast}
