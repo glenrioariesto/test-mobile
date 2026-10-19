@@ -1,29 +1,60 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 
 export function QuantityMultiplierControl({ item, onUpdateQuantity, onPromptRemove }) {
     const step = item.product.stepMultiplier || 1;
+    const [localValue, setLocalValue] = useState(item.quantity.toString());
+
+    // Synchronize local input state whenever item.quantity changes from outside
+    useEffect(() => {
+        setLocalValue(item.quantity.toString());
+    }, [item.quantity]);
 
     const handleDecrement = () => {
         if (item.quantity <= step) {
             onPromptRemove(item.product);
         } else {
-            onUpdateQuantity(item.product.id, item.quantity - step);
+            const nextVal = item.quantity - step;
+            setLocalValue(nextVal.toString());
+            onUpdateQuantity(item.product.id, nextVal);
         }
     };
 
     const handleIncrement = () => {
-        onUpdateQuantity(item.product.id, item.quantity + step);
+        const nextVal = Math.min(999, item.quantity + step);
+        setLocalValue(nextVal.toString());
+        onUpdateQuantity(item.product.id, nextVal);
     };
 
-    const handleDirectInput = (e) => {
-        const val = parseInt(e.target.value, 10);
-        if (!isNaN(val) && val > 0) {
-            onUpdateQuantity(item.product.id, val);
+    // Allows user to backspace and type smoothly without jumping
+    const handleInputChange = (e) => {
+        const valStr = e.target.value;
+        setLocalValue(valStr);
+
+        const parsed = parseInt(valStr, 10);
+        if (!isNaN(parsed) && parsed >= 1 && parsed <= 999) {
+            onUpdateQuantity(item.product.id, parsed);
+        }
+    };
+
+    // On blur: clamp strictly between 1 and 999
+    const handleInputBlur = () => {
+        const parsed = parseInt(localValue, 10);
+        if (isNaN(parsed) || parsed < 1) {
+            setLocalValue('1');
+            onUpdateQuantity(item.product.id, 1);
+        } else if (parsed > 999) {
+            setLocalValue('999');
+            onUpdateQuantity(item.product.id, 999);
+        } else {
+            setLocalValue(parsed.toString());
+            onUpdateQuantity(item.product.id, parsed);
         }
     };
 
     const handleAddMultiple = (multiplier) => {
-        onUpdateQuantity(item.product.id, item.quantity + multiplier);
+        const nextVal = Math.min(999, item.quantity + multiplier);
+        setLocalValue(nextVal.toString());
+        onUpdateQuantity(item.product.id, nextVal);
     };
 
     return (
@@ -40,8 +71,9 @@ export function QuantityMultiplierControl({ item, onUpdateQuantity, onPromptRemo
                 <input
                     type="number"
                     className="qty-stepper__input"
-                    value={item.quantity}
-                    onChange={handleDirectInput}
+                    value={localValue}
+                    onChange={handleInputChange}
+                    onBlur={handleInputBlur}
                     min="1"
                     max="999"
                     aria-label={`Kuantitas ${item.product.name}`}

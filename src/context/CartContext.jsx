@@ -1,6 +1,7 @@
-import React, { createContext, useReducer, useMemo, useCallback } from 'react';
+import React, { createContext, useReducer, useMemo, useCallback, useEffect } from 'react';
 
 export const CartContext = createContext(null);
+const STORAGE_KEY = 'test_mobile_cart_storage_v1';
 
 export const cartReducer = (state, action) => {
     switch (action.type) {
@@ -52,8 +53,37 @@ export const cartReducer = (state, action) => {
     }
 };
 
+// Safe LocalStorage Initializer
+const getInitialState = () => {
+    if (typeof window !== 'undefined' && window.localStorage) {
+        try {
+            const saved = window.localStorage.getItem(STORAGE_KEY);
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                if (Array.isArray(parsed?.items)) {
+                    return parsed;
+                }
+            }
+        } catch (e) {
+            // Fallback gracefully on storage quota or parsing errors
+        }
+    }
+    return { items: [] };
+};
+
 export function CartProvider({ children, onNotify, onBounce }) {
-    const [cartState, dispatch] = useReducer(cartReducer, { items: [] });
+    const [cartState, dispatch] = useReducer(cartReducer, null, getInitialState);
+
+    // Sync to LocalStorage on state change
+    useEffect(() => {
+        if (typeof window !== 'undefined' && window.localStorage) {
+            try {
+                window.localStorage.setItem(STORAGE_KEY, JSON.stringify(cartState));
+            } catch (e) {
+                // Ignore storage write errors (e.g. private mode)
+            }
+        }
+    }, [cartState]);
 
     // Mathematical Invariance Calculations (Objective 3)
     const totalQuantity = useMemo(() => {

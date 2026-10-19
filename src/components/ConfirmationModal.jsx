@@ -2,12 +2,41 @@ import React, { useRef, useEffect } from 'react';
 
 export function ConfirmationModal({ config, onClose }) {
     const confirmBtnRef = useRef(null);
+    const cancelBtnRef = useRef(null);
+    const dialogRef = useRef(null);
 
-    // Accessibility: Auto-focus the action button when dialog opens
+    // Accessibility: Auto-focus confirm button on open & setup Focus Trap
     useEffect(() => {
-        if (config?.isOpen) {
-            confirmBtnRef.current?.focus();
-        }
+        if (!config?.isOpen) return;
+
+        confirmBtnRef.current?.focus();
+
+        const handleKeyDown = (e) => {
+            if (e.key !== 'Tab') return;
+
+            const focusableElements = [cancelBtnRef.current, confirmBtnRef.current].filter(Boolean);
+            if (focusableElements.length < 2) return;
+
+            const firstElement = focusableElements[0];
+            const lastElement = focusableElements[focusableElements.length - 1];
+
+            if (e.shiftKey) {
+                // Shift + Tab: moving backwards
+                if (document.activeElement === firstElement) {
+                    e.preventDefault();
+                    lastElement.focus();
+                }
+            } else {
+                // Tab: moving forwards
+                if (document.activeElement === lastElement) {
+                    e.preventDefault();
+                    firstElement.focus();
+                }
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
     }, [config?.isOpen]);
 
     if (!config || !config.isOpen) return null;
@@ -15,6 +44,7 @@ export function ConfirmationModal({ config, onClose }) {
     return (
         <div className="modal-overlay" onClick={onClose} role="presentation">
             <div 
+                ref={dialogRef}
                 className="modal-dialog" 
                 onClick={e => e.stopPropagation()} 
                 role="dialog" 
@@ -34,7 +64,11 @@ export function ConfirmationModal({ config, onClose }) {
                     )}
                 </div>
                 <div className="modal-actions">
-                    <button className="modal-btn modal-btn-cancel" onClick={onClose}>
+                    <button 
+                        ref={cancelBtnRef}
+                        className="modal-btn modal-btn-cancel" 
+                        onClick={onClose}
+                    >
                         {config.cancelText || 'Batal'}
                     </button>
                     <button 

@@ -61,3 +61,11 @@
     color: var(--color-gray-600);
     padding: 0 4px;
 }
+
+.search-highlight {
+    background-color: #fff3bf;
+    color: #d9480f;
+    font-weight: 700;
+    border-radius: 2px;
+    padding: 0 2px;
+}

@@ -11,6 +11,7 @@ import { ProductGrid } from './components/ProductGrid';
 import { CartDrawer } from './components/CartDrawer';
 import { ConfirmationModal } from './components/ConfirmationModal';
 import { ToastContainer } from './components/ToastContainer';
+import { formatCurrency } from './utils/formatters';
 
 export function AppContent() {
     // 1. Product Catalog Custom Hook
@@ -93,13 +94,13 @@ export function AppContent() {
                     <ul style={{ paddingLeft: '18px', marginBottom: '8px' }}>
                         {cartItems.map(item => (
                             <li key={item.product.id}>
-                                {item.product.name} &times; {item.quantity} unit (NT$ {(item.product.price * item.quantity).toLocaleString()})
+                                {item.product.name} &times; {item.quantity} unit ({formatCurrency(item.product.price * item.quantity)})
                             </li>
                         ))}
                     </ul>
                     <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid var(--color-gray-400)', paddingTop: '6px', fontWeight: 700 }}>
                         <span>Total Pembayaran ({totalQuantity} unit):</span>
-                        <span style={{ color: 'var(--color-primary)' }}>NT$ {totalPrice.toLocaleString()}</span>
+                        <span style={{ color: 'var(--color-primary)' }}>{formatCurrency(totalPrice)}</span>
                     </div>
                 </div>
             ),

@@ -51,7 +51,8 @@ export function ProductGrid({
                 <ProductCard 
                     key={product.id} 
                     product={product} 
-                    onAddToCart={onAddToCart} 
+                    onAddToCart={onAddToCart}
+                    searchQuery={searchQuery}
                 />
             ))}
         </div>

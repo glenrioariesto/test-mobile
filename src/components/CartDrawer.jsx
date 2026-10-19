@@ -1,6 +1,7 @@
 import React from 'react';
 import { useCart } from '../hooks/useCart';
 import { CartItem } from './CartItem';
+import { formatCurrency } from '../utils/formatters';
 
 export function CartDrawer({ isOpen, onClose, onPromptRemove, onPromptCheckout, isCheckingOut }) {
     const { cartItems, totalQuantity, totalSKUs, totalPrice, updateQuantity } = useCart();
@@ -14,6 +15,8 @@ export function CartDrawer({ isOpen, onClose, onPromptRemove, onPromptCheckout, 
             />
             <aside 
                 className={`cart-drawer ${isOpen ? 'open' : ''}`} 
+                role="dialog"
+                aria-modal="true"
                 aria-label="Keranjang Belanja"
             >
                 <div className="cart-drawer__header">
@@ -37,7 +40,16 @@ export function CartDrawer({ isOpen, onClose, onPromptRemove, onPromptCheckout, 
                         <div style={{ textAlign: 'center', padding: '60px 0', color: 'var(--color-gray-600)' }}>
                             <div style={{ fontSize: '42px', marginBottom: '8px' }}>🛍️</div>
                             <p style={{ fontWeight: 600 }}>購物車是空的</p>
-                            <p style={{ fontSize: '13px', marginTop: '4px' }}>Belum ada produk yang ditambahkan.</p>
+                            <p style={{ fontSize: '13px', marginTop: '4px', marginBottom: '16px' }}>
+                                Belum ada produk yang ditambahkan.
+                            </p>
+                            <button 
+                                className="btn-reset" 
+                                onClick={onClose}
+                                style={{ padding: '9px 18px', fontWeight: 600 }}
+                            >
+                                Mulai Belanja Sekarang
+                            </button>
                         </div>
                     ) : (
                         cartItems.map(item => (
@@ -60,7 +72,7 @@ export function CartDrawer({ isOpen, onClose, onPromptRemove, onPromptCheckout, 
                         <div className="cart-summary-line total">
                             <span>總計金額:</span>
                             <span style={{ color: 'var(--color-primary)' }}>
-                                NT$ {totalPrice.toLocaleString()}
+                                {formatCurrency(totalPrice)}
                             </span>
                         </div>
                         <button 

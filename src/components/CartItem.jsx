@@ -1,7 +1,10 @@
 import React from 'react';
 import { QuantityMultiplierControl } from './QuantityMultiplierControl';
+import { formatCurrency } from '../utils/formatters';
 
 export function CartItem({ item, onUpdateQuantity, onPromptRemove }) {
+    const subtotal = item.product.price * item.quantity;
+
     return (
         <div className="cart-item">
             <div className="cart-item__image">{item.product.emoji}</div>
@@ -18,9 +21,9 @@ export function CartItem({ item, onUpdateQuantity, onPromptRemove }) {
                     </button>
                 </div>
                 <div className="cart-item__price">
-                    NT$ {(item.product.price * item.quantity).toLocaleString()}
+                    {formatCurrency(subtotal)}
                     <span style={{ fontSize: '11px', color: 'var(--color-gray-600)', fontWeight: 'normal', marginLeft: '6px' }}>
-                        (@ NT$ {item.product.price.toLocaleString()})
+                        (@ {formatCurrency(item.product.price)})
                     </span>
                 </div>
                 <QuantityMultiplierControl 

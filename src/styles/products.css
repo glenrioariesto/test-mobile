@@ -98,6 +98,11 @@
     transform: scale(0.98);
 }
 
+.product-card__add-btn.added {
+    background-color: var(--color-dark);
+    transform: scale(1.02);
+}
+
 /* Empty State */
 .empty-state {
     text-align: center;
