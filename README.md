@@ -1,10 +1,62 @@
 # 🛍️ Modern E-Commerce Mobile Shopping Cart
 
-Refactoring dan modernisasi aplikasi web e-commerce mobile shopping cart dari legacy vanilla JS menjadi arsitektur berbasis komponen **React 18** modern, responsif mobile-first, dan bebas dependensi build (*zero-build CDN architecture*).
+Refactoring dan modernisasi aplikasi web e-commerce mobile shopping cart menjadi arsitektur modular **React 18 + Vite** tingkat enterprise, menerapkan pemisahan komponen (*code splitting*), custom hooks, state management terpusat, dan desain mobile-first responsif.
 
 ---
 
-## 🚀 Fitur Utama & Pemenuhan Objektif
+## 📁 Struktur Proyek (Modular Code Splitting)
+
+Proyek ini telah dipecah secara modular ke dalam direktori terstruktur:
+
+```
+test-mobile/
+├── index.html                           # Entry point HTML5
+├── vite.config.js                       # Konfigurasi bundler Vite + React
+├── package.json                         # Dependensi dan script manajemen
+├── README.md                            # Dokumentasi lengkap
+├── .gitignore                           # Git ignore aturan node_modules & dist
+│
+└── src/
+    ├── main.jsx                         # React 18 DOM mount point
+    ├── App.jsx                          # Root orchestrator komponen
+    │
+    ├── data/
+    │   └── products.js                  # Data katalog produk (MOCK_PRODUCTS)
+    │
+    ├── context/
+    │   └── CartContext.jsx              # Predictable State Container (useReducer + Context)
+    │
+    ├── hooks/
+    │   ├── useCart.js                   # Hook abstraksi keranjang belanja
+    │   ├── useDebounce.js               # Hook optimasi debounce pencarian (300ms)
+    │   └── useNotification.js           # Hook pengelolaan antrean toast melayang
+    │
+    ├── components/
+    │   ├── Header.jsx                   # Header bar, brand, ikon & badge counter bounce
+    │   ├── SearchBar.jsx                # Input pencarian, ikon, tombol clear & info hasil
+    │   ├── ProductCard.jsx              # Kartu produk, chip kelipatan & tombol tambah
+    │   ├── ProductGrid.jsx              # Grid katalog, loading spinner, error & empty state
+    │   ├── CartDrawer.jsx               # Sidebar drawer keranjang, total ringkasan & checkout
+    │   ├── CartItem.jsx                 # Baris produk keranjang dengan subtotal
+    │   ├── QuantityMultiplierControl.jsx# Kontrol kuantitas: input, stepper & batch (+5, +10)
+    │   ├── ConfirmationModal.jsx        # Dialog modal konfirmasi (checkout & hapus item)
+    │   └── ToastContainer.jsx           # Notifikasi melayang non-blocking auto-dismiss
+    │
+    └── styles/
+        ├── variables.css                # CSS Custom Properties (Design Tokens)
+        ├── base.css                     # Reset, base container & tipografi
+        ├── header.css                   # Tata letak header & animasi bounce badge
+        ├── search.css                   # Gaya input pencarian
+        ├── products.css                 # Grid responsif & kartu produk
+        ├── cart.css                     # Drawer keranjang & kontrol kuantitas
+        ├── modal.css                    # Dialog modal & backdrop blur
+        ├── toast.css                    # Notifikasi toast & transisi
+        └── index.css                    # Master stylesheet mengimpor seluruh modul
+```
+
+---
+
+## 🚀 Fitur Utama & Pemenuhan 5 Objektif
 
 1. **Jendela Dialog Konfirmasi (Confirmation Modal):**
    - Dialog konfirmasi saat pengguna menekan tombol *Checkout*, menyajikan rincian pesanan (item, total unit, total harga) sebelum transaksi diproses.
@@ -27,19 +79,19 @@ Refactoring dan modernisasi aplikasi web e-commerce mobile shopping cart dari le
 
 ---
 
-## 🛠️ Arsitektur & Standar Evaluasi
+## 🛠️ Standar Evaluasi yang Dipenuhi
 
 ### 1. Code Structure (60%)
-- **Framework:** React 18 & ReactDOM via CDN resmi.
-- **Component Separation:** Komposisi komponen modular terisolasi (`SearchBar`, `ProductCard`, `CartDrawer`, `QuantityMultiplierControl`, `ConfirmationModal`, `ToastContainer`).
-- **Hooks & Composition:** Menggunakan Hooks standar (`useState`, `useReducer`, `useEffect`, `useMemo`, `useCallback`, `useRef`).
-- **State Management:** Terpusat menggunakan `CartContext` & `cartReducer` (*predictable state container*).
-- **Custom Hooks:** `useCart()`, `useDebounce()`, `useNotification()`.
-- **CSS Architecture:** Menggunakan *CSS Custom Properties (Design Tokens)*, metodologi BEM, CSS Grid, dan Flexbox responsif.
+- **Modern Framework:** Menggunakan React 18 dengan Vite build toolchain.
+- **Component Separation:** Setiap komponen UI dipisahkan ke dalam berkas independen pada direktori `src/components/`.
+- **Modern Frontend Features:** Menggunakan React Hooks modern (`useState`, `useReducer`, `useEffect`, `useMemo`, `useCallback`, `useRef`, `useContext`).
+- **State Management (3 Poin):** Terpusat menggunakan `CartContext` & `cartReducer` (*predictable state container*).
+- **Custom Hooks:** Terisolasi pada `src/hooks/` (`useCart`, `useDebounce`, `useNotification`).
+- **CSS Architecture:** Terbagi rapi ke dalam 8 berkas modular pada `src/styles/` menggunakan *CSS Custom Properties* dan BEM.
 
 ### 2. Problem Solving & Optimization (30%)
-- Mengatasi layout fixed width 1200px dan `float: right`.
-- Mengatasi overflow drawer pada viewport smartphone (320px–375px).
+- Memperbaiki layout fixed width 1200px dan `float: right`.
+- Memperbaiki overflow drawer pada viewport smartphone (320px–375px).
 - Menghapus polusi variabel global dan manipulasi DOM `innerHTML` yang rentan XSS.
 - Mencegah *double-click checkout* dengan status loading transaksi.
 - Pembersihan event listener otomatis (*cleanup*) pada siklus unmount komponen.
@@ -48,20 +100,19 @@ Refactoring dan modernisasi aplikasi web e-commerce mobile shopping cart dari le
 
 ## 🖥️ Cara Menjalankan
 
-Aplikasi ini bersifat **Zero-Build**. Anda dapat menjalankannya dengan dua cara:
-
-### Cara 1: Langsung di Browser
-Cukup klik ganda berkas `index.html` atau buka melalui browser pilihan Anda:
-```
-file:///C:/project/test-mobile/index.html
-```
-
-### Cara 2: Menjalankan via Local HTTP Server (Opsional)
+### 1. Mode Pengembangan (Development Server)
 ```bash
-# Menggunakan Python
-python -m http.server 3000
-
-# Menggunakan Node.js
-npx serve .
+npm run dev
 ```
-Akses di browser pada: `http://localhost:3000`
+Buka browser pada: `http://localhost:3000` (didukung Hot Module Replacement / HMR).
+
+### 2. Membangun untuk Produksi (Production Build)
+```bash
+npm run build
+```
+Hasil kompilasi siap produksi akan tersedia di direktori `dist/`.
+
+### 3. Pratinjau Hasil Build (Preview)
+```bash
+npm run preview
+```
